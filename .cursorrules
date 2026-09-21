@@ -1,0 +1,17 @@
+# National Unified Material Master Framework — SIH Project
+
+## Stack
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Drizzle ORM + PostgreSQL
+- Lucide React + Recharts
+
+## Conventions
+- Use Server Components by default; mark interactivity with `"use client"`.
+- All DB tables defined in `src/db/schema.ts` using `drizzle-orm/pg-core`.
+- Import db from `@/db`.
+- Use `src/lib/utils.ts` for `cn()` helper.
+- API routes return `NextResponse.json({ success, data, message })`.
+- Keep hackathon demo seed in `src/lib/seed.ts`.
