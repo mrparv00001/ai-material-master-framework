@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { seedDatabase } from "@/lib/seed";
+import { assertDatabaseUrl } from "@/db";
 
 export async function POST() {
   try {
+    assertDatabaseUrl();
     const result = await seedDatabase();
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

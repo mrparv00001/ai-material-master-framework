@@ -2,24 +2,41 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required");
-}
-
 const globalForDb = globalThis as typeof globalThis & {
   __arenaNextJsPostgresqlPool?: Pool;
+  __arenaNextJsDb?: typeof import("drizzle-orm/node-postgres").drizzle;
 };
 
-export const pool =
-  globalForDb.__arenaNextJsPostgresqlPool ??
-  new Pool({
-    connectionString: databaseUrl,
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.__arenaNextJsPostgresqlPool = pool;
+function getDatabaseUrl(): string {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    // Vercel's build step evaluates modules before injecting env vars,
+    // so we provide a placeholder. Runtime requests will validate below.
+    return "postgresql://localhost:5432/app_db";
+  }
+  return url;
 }
 
-export const db = drizzle(pool, { schema });
+function createPool(): Pool {
+  return new Pool({ connectionString: getDatabaseUrl() });
+}
+
+function getPool(): Pool {
+  if (!globalForDb.__arenaNextJsPostgresqlPool) {
+    globalForDb.__arenaNextJsPostgresqlPool = createPool();
+  }
+  return globalForDb.__arenaNextJsPostgresqlPool;
+}
+
+function createDrizzleClient() {
+  return drizzle(getPool(), { schema });
+}
+
+export const pool = getPool();
+export const db = createDrizzleClient();
+
+export function assertDatabaseUrl(): void {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL environment variable is required");
+  }
+}
